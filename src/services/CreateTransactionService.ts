@@ -1,9 +1,9 @@
-// import AppError from '../errors/AppError';
-
 import { getRepository, getCustomRepository } from 'typeorm';
+import AppError from '../errors/AppError';
+
 import Transaction from '../models/Transaction';
 import Category from '../models/Category';
-import TransactionRepository from '../repositories/TransactionsRepository';
+import TransactionsRepository from '../repositories/TransactionsRepository';
 
 interface Request {
   title: string;
@@ -19,6 +19,21 @@ class CreateTransactionService {
     value,
     category,
   }: Request): Promise<Transaction> {
+    const allowedTypes = ['income', 'outcome'];
+
+    if (!allowedTypes.includes(type))
+      throw new AppError('The type does not exists');
+
+    if (value <= 0) throw new AppError('The value can not be less then zero');
+
+    const transactionsRepository = getCustomRepository(TransactionsRepository);
+
+    if (type === 'outcome') {
+      const { total } = transactionsRepository.getBalance();
+
+      if (value > total) throw Error('You do not have enough balance');
+    }
+
     const categoryRepository = getRepository(Category);
 
     const categoryCreated = categoryRepository.create({ title: category });
@@ -31,10 +46,8 @@ class CreateTransactionService {
       category: categoryCreated,
     };
 
-    const transactionRepository = getCustomRepository(TransactionRepository);
-
-    const transactionCreated = transactionRepository.create(transaction);
-    await transactionRepository.save(transactionCreated);
+    const transactionCreated = transactionsRepository.create(transaction);
+    await transactionsRepository.save(transactionCreated);
 
     return transactionCreated;
   }
