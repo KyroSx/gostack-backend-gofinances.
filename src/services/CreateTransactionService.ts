@@ -29,9 +29,9 @@ class CreateTransactionService {
     const transactionsRepository = getCustomRepository(TransactionsRepository);
 
     if (type === 'outcome') {
-      const { total } = transactionsRepository.getBalance();
+      const { total } = await transactionsRepository.getBalance();
 
-      if (value > total) throw Error('You do not have enough balance');
+      if (value > total) throw new AppError('You do not have enough balance');
     }
 
     const categoryRepository = getRepository(Category);
