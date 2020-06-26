@@ -17,7 +17,7 @@ class CreateTransactionService {
     title,
     type,
     value,
-    category,
+    category: category_title,
   }: Request): Promise<Transaction> {
     const allowedTypes = ['income', 'outcome'];
 
@@ -36,25 +36,25 @@ class CreateTransactionService {
 
     const categoryRepository = getRepository(Category);
 
-    const categoryObject = { title: category };
+    const categoryObject = { title: category_title };
 
     const existsCategoryInDatabase = await categoryRepository.findOne({
       where: categoryObject,
     });
 
-    const categoryCreated =
+    const category =
       existsCategoryInDatabase || categoryRepository.create(categoryObject);
-    await categoryRepository.save(categoryCreated);
+    await categoryRepository.save(category);
 
-    const transaction = {
+    const transactionCreated = transactionsRepository.create({
       title,
       type,
       value,
-      category: categoryCreated,
-    };
-
-    const transactionCreated = transactionsRepository.create(transaction);
+      category,
+    });
     await transactionsRepository.save(transactionCreated);
+
+    console.log(transactionCreated);
 
     return transactionCreated;
   }
