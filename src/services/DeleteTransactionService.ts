@@ -4,12 +4,13 @@ import TransactionsRepository from '../repositories/TransactionsRepository';
 
 class DeleteTransactionService {
   public async execute(id: string): Promise<void> {
-    const transactionRepository = getCustomRepository(TransactionsRepository);
-    try {
-      await transactionRepository.delete({ id });
-    } catch {
-      throw new AppError('This transaction-id doest not exits');
-    }
+    const transactionsRepository = getCustomRepository(TransactionsRepository);
+
+    const transaction = await transactionsRepository.findOne(id);
+
+    if (!transaction) throw new AppError('This transaction-id doest not exits');
+
+    await transactionsRepository.remove(transaction);
   }
 }
 
